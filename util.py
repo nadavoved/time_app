@@ -1,3 +1,4 @@
+import functools
 import os
 
 from zoneinfo import ZoneInfo
@@ -10,14 +11,14 @@ from dateutil.parser import parse
 
 def cprint(inp: str):
     """Print customized foreground and background colors."""
-    print(f'{Fore.LIGHTYELLOW_EX}{Back.LIGHTBLUE_EX}{inp}{Style.RESET_ALL}')
+    print(f'{Fore.LIGHTGREEN_EX}{Back.LIGHTBLUE_EX}{inp}{Style.RESET_ALL}')
 
 
 def validate_func_input(func, inp_func=input, prompt=None,
                         break_value=None, **kwargs):
     """Return a validated return value of func(inp)."""
     if prompt is not None:
-        pr_suffix = f' {Fore.GREEN}>>>{Style.RESET_ALL} '
+        pr_suffix = highlight(' >>> ', color='g')
         prompt += pr_suffix
 
         def simple_inp_func():
@@ -35,7 +36,7 @@ def validate_func_input(func, inp_func=input, prompt=None,
             else:
                 return func(inp, **kwargs)
         except Exception as err:
-            print(f'{Fore.RED}{err}{Style.RESET_ALL}'.strip('\' '))
+            print(highlight(str(err).strip('\' '), color='r'))
 
 
 def validate_input(inp, allowed_values):
@@ -69,14 +70,23 @@ def validate_date(dt_and_zone):
         raise ValueError('Can\'t set alarm in the past !')
 
 
-def highlight(text, status=False):
-    if not status:
-        return f'{Fore.LIGHTYELLOW_EX}{text}{Style.RESET_ALL}'
-    return f'{Fore.LIGHTBLUE_EX}{text}{Style.RESET_ALL}'
+def highlight(text, color: str = 'y'):
+    suffix = f'{text}{Style.RESET_ALL}'
+    match color.lower():
+        case 'r' | 'red':
+            return f'{Fore.LIGHTYELLOW_EX}{suffix}'
+        case 'g' | 'green':
+            return f'{Fore.GREEN}{suffix}'
+        case 'b' | 'blue':
+            return f'{Fore.LIGHTBLUE_EX}{suffix}'
+        case 'y' | 'yellow':
+            return f'{Fore.LIGHTYELLOW_EX}{suffix}'
+        case _:
+            return text
 
 
 def title(text):
-    return highlight(f'\n{text}\n{"_" * len(text)}', status=True)
+    return highlight(f'\n{text}\n{"_" * len(text)}', color='b')
 
 
 def clear():
@@ -84,3 +94,22 @@ def clear():
         os.system('cls')
     else:
         os.system('clear')
+
+
+def act_on_interrupt(*, shutdown: bool):
+    """Decorate a function to allow keyboard interrupt to cause a restart / exit of it."""
+
+    def inner(func):
+        @functools.wraps
+        def wrapper(*args, **kwargs):
+            while True:
+                try:
+                    func(*args, **kwargs)
+                    break
+                except KeyboardInterrupt:
+                    if not shutdown:
+                        continue
+                    else:
+                        break
+        return wrapper
+    return inner

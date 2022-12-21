@@ -80,44 +80,40 @@ class AlarmScheduler:
         return highlight('\nNo Pending Alarms.\n')
 
 
+def remove_alarm(scheduler):
+    print(title('REMOVAL MODE'))
+    print(scheduler)
+    allowed_values = [str(n) for n in range(1, len(scheduler.jobs) + 1)]
+    i = validate_func_input(func=validate_input, prompt='Select an alarm to remove', allowed_values=allowed_values)
+    scheduler.pop(int(i))
+
+
+def set_alarm(scheduler):
+    print(title('SETTING MODE'))
+    print(scheduler)
+    dt = validate_func_input(func=validate_date, inp_func=input_date)
+    alarm_prompt = input(f'Enter alarm prompt, '
+                         f'or press "Enter" to use default one'
+                         f'{highlight(" >>> ", color="g")}')
+    clear()
+    scheduler.add(Alarm(dt, alarm_prompt))
+
+
+@act_on_interrupt(shutdown=False)
 def edit_alarm(scheduler: AlarmScheduler):
     """Add/Remove an alarm to/from a given scheduler.
     Alarm is constructed by user input.
     """
-
-    def remove_alarm():
-        print(title('REMOVAL MODE'))
-        print(scheduler)
-        allowed_values = [str(n) for n in range(1, len(scheduler.jobs) + 1)]
-        i = validate_func_input(func=validate_input, prompt='Select an alarm to remove', allowed_values=allowed_values)
-        scheduler.pop(int(i))
-
-    def set_alarm():
-        print(title('SETTING MODE'))
-        print(scheduler)
-        dt = validate_func_input(func=validate_date, inp_func=input_date)
-        alarm_prompt = input(f'Enter alarm prompt, '
-                             f'or press "Enter" to use default one'
-                             f' {Fore.GREEN}>>>{Style.RESET_ALL} ')
-        clear()
-        scheduler.add(Alarm(dt, alarm_prompt))
-
-    while True:
-        try:
-            if scheduler.has_jobs:
-                action = validate_func_input(func=validate_input,
-                                             prompt='set or remove an alarm[s/r]?',
-                                             allowed_values=['s', 'r', 'S', 'R'])
-                if action.lower() == 'r':
-                    remove_alarm()
-                else:
-                    set_alarm()
-            else:
-                set_alarm()
-            break
-        except KeyboardInterrupt:
-            clear()
-            continue
+    if scheduler.has_jobs:
+        action = validate_func_input(func=validate_input,
+                                     prompt='set or remove an alarm[s/r]?',
+                                     allowed_values=['s', 'r', 'S', 'R'])
+        if action.lower() == 'r':
+            remove_alarm(scheduler)
+        else:
+            set_alarm(scheduler)
+    else:
+        set_alarm(scheduler)
 
 
 def edit_scheduler(sc: AlarmScheduler, repeated_input=False):
@@ -128,11 +124,11 @@ def edit_scheduler(sc: AlarmScheduler, repeated_input=False):
             edit_alarm(sc)
             try:
                 input(highlight('\nPress any button to repeat, '
-                                '"Ctrl + C" to exit input mode: ', status=True))
+                                '"Ctrl + C" to exit input mode: ', color='b'))
                 clear()
             except KeyboardInterrupt:
                 print(highlight(f'Exiting input mode...'
-                                f'Don\'t forget to run the scheduler !', status=True))
+                                f'Don\'t forget to run the scheduler !', color='b'))
                 break
     else:
         edit_alarm(sc)
@@ -140,6 +136,6 @@ def edit_scheduler(sc: AlarmScheduler, repeated_input=False):
 
 
 def run_scheduler(sc: AlarmScheduler):
-    print(highlight('Scheduler is up and running...', status=True))
+    print(highlight('Scheduler is up and running...', color='b'))
     print(sc)
     sc.exhaust()
