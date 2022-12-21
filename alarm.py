@@ -32,7 +32,7 @@ class Alarm:
 
 class AlarmScheduler:
     """Scheduler Class."""
-    _CACHE_PATH = 'caches/alarm_cache.sqlite'
+    _CACHE_PATH = 'cache/alarm_cache.sqlite'
 
     def __init__(self):
         db_url = f'sqlite:///{self._CACHE_PATH}'
