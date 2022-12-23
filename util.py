@@ -62,12 +62,20 @@ def validate_date(dt_and_zone):
         given_time = dt.replace(tzinfo=zone)
     else:
         given_time = dt
-    print(highlight(f'date: {given_time}'))
+    print(highlight(f'date: {format_dt(given_time)}'))
     now = datetime.now(tz=given_time.tzinfo)
     if given_time > now:
         return given_time
     else:
         raise ValueError('Can\'t set alarm in the past !')
+
+
+def format_dt(dt: datetime):
+    """Format datetime to string."""
+    if dt.tzinfo:
+        return dt.strftime("%m/%d/%Y, %H:%M:%S, %Z")
+    else:
+        return dt.strftime("%m/%d/%Y, %H:%M:%S")
 
 
 def highlight(text, color: str = 'y'):
@@ -100,16 +108,18 @@ def act_on_interrupt(*, shutdown: bool):
     """Decorate a function to allow keyboard interrupt to cause a restart / exit of it."""
 
     def inner(func):
-        @functools.wraps
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             while True:
                 try:
-                    func(*args, **kwargs)
-                    break
+                    return func(*args, **kwargs)
                 except KeyboardInterrupt:
+                    clear()
                     if not shutdown:
                         continue
                     else:
                         break
+
         return wrapper
+
     return inner

@@ -60,9 +60,9 @@ if __name__ == '__main__':
             sc = AlarmScheduler()
             if args.flush:
                 sc.flush()
-                print(util.highlight('Cleared alarm cache', status=True))
+                print(util.highlight('Cleared alarm cache', color='y'))
             elif args.edit:
-                edit_scheduler(sc, repeated_input=args.repeat)
+                edit_scheduler(sc, repeat=args.repeat)
             else:
                 run_scheduler(sc)
         case 'timer':

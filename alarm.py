@@ -24,7 +24,7 @@ class Alarm:
         """
         self.dt = dt_obj
         self.prompt = prompt
-        self.id = str(self.dt)
+        self.id = format_dt(self.dt)
 
     def __str__(self):
         return f'date: {self.dt}\nprompt: {self.prompt}'
@@ -80,59 +80,58 @@ class AlarmScheduler:
         return highlight('\nNo Pending Alarms.\n')
 
 
-def remove_alarm(scheduler):
+def remove_alarm(sc):
+    print(sc)
     print(title('REMOVAL MODE'))
-    print(scheduler)
-    allowed_values = [str(n) for n in range(1, len(scheduler.jobs) + 1)]
-    i = validate_func_input(func=validate_input, prompt='Select an alarm to remove', allowed_values=allowed_values)
-    scheduler.pop(int(i))
+    allowed_values = [str(n) for n in range(1, len(sc.jobs) + 1)]
+    i = validate_func_input(func=validate_input,
+                            prompt='Select an alarm to remove',
+                            allowed_values=allowed_values)
+    sc.pop(int(i))
 
 
-def set_alarm(scheduler):
+def set_alarm(sc: AlarmScheduler):
+    print(sc)
     print(title('SETTING MODE'))
-    print(scheduler)
     dt = validate_func_input(func=validate_date, inp_func=input_date)
     alarm_prompt = input(f'Enter alarm prompt, '
                          f'or press "Enter" to use default one'
                          f'{highlight(" >>> ", color="g")}')
     clear()
-    scheduler.add(Alarm(dt, alarm_prompt))
+    sc.add(Alarm(dt, alarm_prompt))
 
 
 @act_on_interrupt(shutdown=False)
-def edit_alarm(scheduler: AlarmScheduler):
+def edit_alarm(sc: AlarmScheduler):
     """Add/Remove an alarm to/from a given scheduler.
     Alarm is constructed by user input.
     """
-    if scheduler.has_jobs:
+    if sc.has_jobs:
         action = validate_func_input(func=validate_input,
-                                     prompt='set or remove an alarm[s/r]?',
+                                     prompt=f'{sc}\nSet or remove an alarm[s/r]?',
                                      allowed_values=['s', 'r', 'S', 'R'])
         if action.lower() == 'r':
-            remove_alarm(scheduler)
+            remove_alarm(sc)
         else:
-            set_alarm(scheduler)
+            set_alarm(sc)
     else:
-        set_alarm(scheduler)
+        set_alarm(sc)
 
 
-def edit_scheduler(sc: AlarmScheduler, repeated_input=False):
-    """edit a scheduler."""
-    print(title('ALARM INPUT MODE'))
-    if repeated_input:
-        while True:
-            edit_alarm(sc)
-            try:
-                input(highlight('\nPress any button to repeat, '
-                                '"Ctrl + C" to exit input mode: ', color='b'))
-                clear()
-            except KeyboardInterrupt:
-                print(highlight(f'Exiting input mode...'
-                                f'Don\'t forget to run the scheduler !', color='b'))
-                break
+@act_on_interrupt(shutdown=True)
+def edit_alarm_repeated(sc: AlarmScheduler):
+    while True:
+        edit_alarm(sc)
+        input(highlight('\nPress any button to repeat, '
+                        '"Ctrl + C" to exit input mode: ', color='b'))
+        clear()
+
+
+def edit_scheduler(sc, repeat=False):
+    if repeat:
+        edit_alarm_repeated(sc)
     else:
         edit_alarm(sc)
-    print(sc)
 
 
 def run_scheduler(sc: AlarmScheduler):
