@@ -4,8 +4,8 @@ from warnings import filterwarnings
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
-from util import *
-
+import display_util
+import input_and_flow_util
 filterwarnings('ignore',
                message=r'The localize method is no longer necessary.*')
 
@@ -13,7 +13,7 @@ filterwarnings('ignore',
 class Alarm:
     """Alarm class."""
 
-    def __init__(self, dt_obj: datetime, prompt: str = 'TIME OUT!!!'):
+    def __init__(self, dt_obj, prompt: str = 'TIME OUT!!!'):
         """Constructor method.
         :param: dt_obj: a datetime object.
         :type: date: datetime.datetime
@@ -24,7 +24,7 @@ class Alarm:
         """
         self.dt = dt_obj
         self.prompt = prompt
-        self.id = format_dt(self.dt)
+        self.id = display_util.format_dt(self.dt)
 
     def __str__(self):
         return f'date: {self.dt}\nprompt: {self.prompt}'
@@ -49,15 +49,15 @@ class AlarmScheduler:
     def add(self, alarm: Alarm):
         """Schedule a new alarm / rewrite an existing one."""
         self._scheduler.add_job(replace_existing=True, id=alarm.id,
-                                func=cprint, trigger='date',
+                                func=display_util.cprint, trigger='date',
                                 run_date=alarm.dt, args=[alarm.prompt])
-        print(highlight(f'Alarm was set on {alarm.id}'))
+        print(display_util.highlight(f'Alarm was set on {alarm.id}'))
 
     def pop(self, index: int):
         """Deactivate alarm if scheduled."""
         job = self.jobs[index - 1]
         self._scheduler.remove_job(job_id=job.id)
-        print(highlight(f'\nAlarm on {job.id} was removed.'))
+        print(display_util.highlight(f'\nAlarm on {job.id} was removed.'))
 
     def flush(self):
         """Clear Cache."""
@@ -76,15 +76,16 @@ class AlarmScheduler:
             res = '\nPending Alarms:\n_______________\n'
             for item in enumerate(self.jobs, start=1):
                 res += f'({item[0]}) {item[1].id}\n'
-            return highlight(res)
-        return highlight('\nNo Pending Alarms.\n')
+            return display_util.highlight(res)
+        return display_util.highlight('\nNo Pending Alarms.\n')
 
 
 def remove_alarm(sc):
     print(sc)
-    print(title('REMOVAL MODE'))
+    print(display_util.title('REMOVAL MODE'))
     allowed_values = [str(n) for n in range(1, len(sc.jobs) + 1)]
-    i = validate_func_input(func=validate_input,
+    i = input_and_flow_util.get_validated_input(
+                            validation_func=input_and_flow_util.validate_known_input,
                             prompt='Select an alarm to remove',
                             allowed_values=allowed_values)
     sc.pop(int(i))
@@ -92,22 +93,24 @@ def remove_alarm(sc):
 
 def set_alarm(sc: AlarmScheduler):
     print(sc)
-    print(title('SETTING MODE'))
-    dt = validate_func_input(func=validate_date, inp_func=input_date)
+    print(display_util.title('SETTING MODE'))
+    dt = input_and_flow_util.get_validated_input(validation_func=input_and_flow_util.validate_date,
+                                                 inp_func=input_and_flow_util.input_date)
     alarm_prompt = input(f'Enter alarm prompt, '
                          f'or press "Enter" to use default one'
-                         f'{highlight(" >>> ", color="g")}')
-    clear()
+                         f'{display_util.highlight(" >>> ", color="g")}')
+    display_util.clear()
     sc.add(Alarm(dt, alarm_prompt))
 
 
-@act_on_interrupt(shutdown=False)
+@input_and_flow_util.act_on_interrupt
 def edit_alarm(sc: AlarmScheduler):
     """Add/Remove an alarm to/from a given scheduler.
     Alarm is constructed by user input.
     """
     if sc.has_jobs:
-        action = validate_func_input(func=validate_input,
+        action = input_and_flow_util.get_validated_input(
+                                     validation_func=input_and_flow_util.validate_known_input,
                                      prompt=f'{sc}\nSet or remove an alarm[s/r]?',
                                      allowed_values=['s', 'r', 'S', 'R'])
         if action.lower() == 'r':
@@ -118,23 +121,16 @@ def edit_alarm(sc: AlarmScheduler):
         set_alarm(sc)
 
 
-@act_on_interrupt(shutdown=True)
-def edit_alarm_repeated(sc: AlarmScheduler):
-    while True:
-        edit_alarm(sc)
-        input(highlight('\nPress any button to repeat, '
-                        '"Ctrl + C" to exit input mode: ', color='b'))
-        clear()
-
 
 def edit_scheduler(sc, repeat=False):
     if repeat:
-        edit_alarm_repeated(sc)
+        while True:
+            edit_alarm(sc)
     else:
         edit_alarm(sc)
 
 
 def run_scheduler(sc: AlarmScheduler):
-    print(highlight('Scheduler is up and running...', color='b'))
+    print(display_util.highlight('Scheduler is up and running...', color='b'))
     print(sc)
     sc.exhaust()
