@@ -4,8 +4,8 @@ from warnings import filterwarnings
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
-import display_util
-import input_and_flow_util
+from util import display_util, flow_util
+
 filterwarnings('ignore',
                message=r'The localize method is no longer necessary.*')
 
@@ -84,8 +84,8 @@ def remove_alarm(sc):
     print(sc)
     print(display_util.title('REMOVAL MODE'))
     allowed_values = [str(n) for n in range(1, len(sc.jobs) + 1)]
-    i = input_and_flow_util.get_validated_input(
-                            validation_func=input_and_flow_util.validate_known_input,
+    i = flow_util.get_validated_input(
+                            validation_func=flow_util.validate_known_input,
                             prompt='Select an alarm to remove',
                             allowed_values=allowed_values)
     sc.pop(int(i))
@@ -94,8 +94,8 @@ def remove_alarm(sc):
 def set_alarm(sc: AlarmScheduler):
     print(sc)
     print(display_util.title('SETTING MODE'))
-    dt = input_and_flow_util.get_validated_input(validation_func=input_and_flow_util.validate_date,
-                                                 inp_func=input_and_flow_util.input_date)
+    dt = flow_util.get_validated_input(validation_func=flow_util.validate_date,
+                                       inp_func=flow_util.input_date)
     alarm_prompt = input(f'Enter alarm prompt, '
                          f'or press "Enter" to use default one'
                          f'{display_util.highlight(" >>> ", color="g")}')
@@ -103,14 +103,14 @@ def set_alarm(sc: AlarmScheduler):
     sc.add(Alarm(dt, alarm_prompt))
 
 
-@input_and_flow_util.act_on_interrupt
+@flow_util.act_on_interrupt
 def edit_alarm(sc: AlarmScheduler):
     """Add/Remove an alarm to/from a given scheduler.
     Alarm is constructed by user input.
     """
     if sc.has_jobs:
-        action = input_and_flow_util.get_validated_input(
-                                     validation_func=input_and_flow_util.validate_known_input,
+        action = flow_util.get_validated_input(
+                                     validation_func=flow_util.validate_known_input,
                                      prompt=f'{sc}\nSet or remove an alarm[s/r]?',
                                      allowed_values=['s', 'r', 'S', 'R'])
         if action.lower() == 'r':
