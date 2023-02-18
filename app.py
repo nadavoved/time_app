@@ -1,6 +1,6 @@
 import argparse
 
-import util
+from util import display_util
 from alarm import run_scheduler, edit_scheduler, AlarmScheduler
 
 
@@ -53,14 +53,14 @@ def get_args():
 
 
 if __name__ == '__main__':
-    util.clear()
+    display_util.clear()
     args = get_args()
     match args.mode:
         case 'alarm':
             sc = AlarmScheduler()
             if args.flush:
                 sc.flush()
-                print(util.highlight('Cleared alarm cache', color='y'))
+                print(display_util.highlight('Cleared alarm cache', color='y'))
             elif args.edit:
                 edit_scheduler(sc, repeat=args.repeat)
             else:

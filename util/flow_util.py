@@ -8,7 +8,8 @@ from zoneinfo import ZoneInfo
 from datetime import datetime
 
 from dateutil.parser import parse
-from display_util import highlight, clear, format_dt
+
+from util.display_util import highlight, clear, format_dt
 
 def get_validated_input(validation_func, inp_func=input, prompt: str=None,
                         break_value: str=None, **kwargs):
