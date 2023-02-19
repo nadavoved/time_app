@@ -1,5 +1,7 @@
 import argparse
 
+import pandas as pd
+
 from util import display_util
 from alarm import run_scheduler, edit_scheduler, AlarmScheduler
 
@@ -62,7 +64,8 @@ if __name__ == '__main__':
                 sc.flush()
                 print(display_util.highlight('Cleared alarm cache', color='y'))
             elif args.edit:
-                edit_scheduler(sc, repeat=args.repeat)
+                df = pd.read_parquet(path='geo_data/complete_data.parquet')
+                edit_scheduler(sc, tz_frame=df, repeat=args.repeat)
             else:
                 run_scheduler(sc)
         case 'timer':

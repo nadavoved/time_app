@@ -1,7 +1,8 @@
 import os
 
 from colorama import Fore, Back, Style
-from datetime import datetime
+from datetime import datetime, timedelta
+
 
 def cprint(inp: str):
     """Print customized foreground and background colors."""
@@ -42,3 +43,13 @@ def format_dt(dt: datetime):
         return dt.strftime("%m/%d/%Y, %H:%M:%S, %Z")
     else:
         return dt.strftime("%m/%d/%Y, %H:%M:%S")
+
+
+def format_delta(td: timedelta):
+    """Format timedelta to string."""
+    days = td.days
+    hours, seconds_rem = divmod(td.total_seconds(), 3600)
+    minutes, seconds = divmod(seconds_rem, 60)
+    z = zip((days, hours, minutes, seconds), ('d', 'h', 'm', 's'))
+    d = {label: item for item, label in z if item > 0}
+

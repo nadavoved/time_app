@@ -84,18 +84,18 @@ def remove_alarm(sc):
     print(sc)
     print(display_util.title('REMOVAL MODE'))
     allowed_values = [n for n in range(1, len(sc.jobs) + 1)]
-    i = flow_util.get_validated_input(
+    i = flow_util.get_validated_output(
                             validation_func=flow_util.validate_known_input,
                             prompt='Select an alarm to remove',
                             allowed_values=allowed_values)
     sc.pop(int(i))
 
 
-def set_alarm(sc: AlarmScheduler):
+def set_alarm(sc: AlarmScheduler, tz_frame):
     print(sc)
     print(display_util.title('SETTING MODE'))
-    dt = flow_util.get_validated_input(validation_func=flow_util.validate_date,
-                                       inp_func=flow_util.input_date)
+    dt = flow_util.get_validated_output(validation_func=flow_util.validate_date,
+                                        tz_frame=tz_frame)
     alarm_prompt = input(f'Enter alarm prompt, '
                          f'or press "Enter" to use default one'
                          f'{display_util.highlight(" >>> ", color="g")}')
@@ -104,30 +104,36 @@ def set_alarm(sc: AlarmScheduler):
 
 
 @flow_util.act_on_interrupt
-def edit_alarm(sc: AlarmScheduler):
+def edit_alarm(sc: AlarmScheduler, tz_frame):
     """Add/Remove an alarm to/from a given scheduler.
     Alarm is constructed by user input.
     """
+    def edit():
+        set_alarm(sc, tz_frame=tz_frame)
+
     if sc.has_jobs:
-        action = flow_util.get_validated_input(
+        action = flow_util.get_validated_output(
                                      validation_func=flow_util.validate_known_input,
                                      prompt=f'{sc}\nSet or remove an alarm[s/r]?',
                                      allowed_values=['s', 'r', 'S', 'R'])
         if action.lower() == 'r':
             remove_alarm(sc)
         else:
-            set_alarm(sc)
+            edit()
     else:
-        set_alarm(sc)
+        edit()
 
 
 
-def edit_scheduler(sc, repeat=False):
+def edit_scheduler(sc, tz_frame, repeat=False):
+    def edit():
+        edit_alarm(sc, tz_frame=tz_frame)
+
     if repeat:
         while True:
-            edit_alarm(sc)
+            edit()
     else:
-        edit_alarm(sc)
+        edit()
 
 
 def run_scheduler(sc: AlarmScheduler):
