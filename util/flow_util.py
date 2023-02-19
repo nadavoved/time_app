@@ -59,7 +59,8 @@ def input_date():
                                prompt='Enter a timezone, or press '
                                       '"Enter" for the '
                                       'current timezone', break_value='')
-    dt = get_validated_input(validation_func=parse, prompt='Enter a date')
+    dt = get_validated_input(validation_func=parse, prompt='Enter a date',
+                             ignoretz=True)
     if zone:
         dt = dt.replace(tzinfo=zone)
     return dt
