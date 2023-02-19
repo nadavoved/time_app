@@ -3,10 +3,9 @@ import time
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from datetime import datetime, timedelta
 
-import pandas as pd
 from dateutil.parser import parse
 
-from util.display_util import highlight, clear, format_dt, format_delta
+from util.display_util import highlight, clear, format_dt, format_delta, format_date_and_delta
 
 
 def get_validated_output(*, validation_func, prompt: str=None,
@@ -63,7 +62,7 @@ def validate_date(tz_frame):
     else:
         dt = dt.astimezone()
     delta = dt - datetime.now().astimezone()
-    print(highlight(f'date: {format_dt(dt)} ({format_delta(delta)} from now)'))
+    print(format_date_and_delta(dt, delta))
     if delta > timedelta():
         return dt
     else:
@@ -82,16 +81,18 @@ def validate_tz(tz_str: str, tz_frame):
         if not res.empty:
             n = len(res)
             if n > 1:
-                res.index = range(1, n + 1)
-                menu = res[['tz_name', 'utc_offset']]
+                val_lst = list(range(1, n + 1))
+                res.index = [f'({i})' for i in val_lst]
+                slc = res[['country', 'utc_offset']]
+                menu = slc.rename(columns=dict(country='Country', utc_offset='UTC Offset'))
                 prompt = (highlight(f"{tz_str} has {n} time zones:\n"
                           f"Select a number from the given menu\n{menu}\n"))
                 sel = get_validated_output(validation_func=validate_known_input,
-                                           prompt=prompt, allowed_values=list(res.index))
-                tz = res.loc[int(sel), 'timezone']
+                                           prompt=prompt, allowed_values=val_lst)
+                i = int(sel) - 1
             else:
-                tz = res.iloc[0].timezone
-            return ZoneInfo(tz)
+                i = 0
+            return ZoneInfo(res.timezone.iloc[i])
     raise ZoneInfoNotFoundError(f'No such zone as "{tz_str}"!')
 
 def act_on_interrupt(func):

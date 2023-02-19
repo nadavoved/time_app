@@ -40,16 +40,40 @@ def clear():
 def format_dt(dt: datetime):
     """Format datetime to string."""
     if dt.tzinfo:
-        return dt.strftime("%m/%d/%Y, %H:%M:%S, %Z")
+        return dt.strftime("%m/%d/%Y, %H:%M:%S, %Z, UTC%z")
     else:
         return dt.strftime("%m/%d/%Y, %H:%M:%S")
 
 
 def format_delta(td: timedelta):
-    """Format timedelta to string."""
-    days = td.days
-    hours, seconds_rem = divmod(td.total_seconds(), 3600)
-    minutes, seconds = divmod(seconds_rem, 60)
-    z = zip((days, hours, minutes, seconds), ('d', 'h', 'm', 's'))
-    d = {label: item for item, label in z if item > 0}
+    """Format timedelta as a string, and mention whether it's negative or not."""
+    ttl_secs = td.total_seconds()
+    is_neg = ttl_secs < 0
+    d = {}
+    d['days'], rem = divmod(abs(int(ttl_secs)), 60 ** 2 * 24)
+    d['hours'], rem = divmod(rem, 60 ** 2)
+    d['minutes'], d['seconds']  = divmod(rem, 60)
+    lst = []
+    for key, value in d.items():
+        match value:
+            case 1:
+                lst.append(f'{value} {key[:-1]}')
+            case 0:
+                pass
+            case _:
+                lst.append(f'{value} {key}')
+    if len(lst) > 1:
+        res = f"{', '.join(lst[:-1])} and {lst[-1]}"
+    elif lst:
+        res = lst[0]
+    else:
+        res = '0 seconds'
+    return res, is_neg
+
+def format_date_and_delta(dt, delta):
+    delta_str, is_neg = format_delta(delta)
+    chron_order = {True: 'Before', False: 'In'}
+    chron_color = {True: 'r', False: 'y'}
+    return highlight(f'date: {format_dt(dt)}\n{chron_order[is_neg]} {delta_str}.',
+                    color=chron_color[is_neg])
 

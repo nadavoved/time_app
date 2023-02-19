@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from warnings import filterwarnings
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -27,7 +28,9 @@ class Alarm:
         self.id = display_util.format_dt(self.dt)
 
     def __str__(self):
-        return f'date: {self.dt}\nprompt: {self.prompt}'
+        delta = self.dt - datetime.now().astimezone()
+        fmt = display_util.format_date_and_delta(self.dt, delta)
+        return f'{fmt}\nprompt: {display_util.highlight(self.prompt)}'
 
 
 class AlarmScheduler:
@@ -51,7 +54,7 @@ class AlarmScheduler:
         self._scheduler.add_job(replace_existing=True, id=alarm.id,
                                 func=display_util.cprint, trigger='date',
                                 run_date=alarm.dt, args=[alarm.prompt])
-        print(display_util.highlight(f'Alarm was set on {alarm.id}'))
+        print(display_util.highlight(f'Alarm was set on {alarm}'))
 
     def pop(self, index: int):
         """Deactivate alarm if scheduled."""
@@ -81,12 +84,11 @@ class AlarmScheduler:
 
 
 def remove_alarm(sc):
-    print(sc)
     print(display_util.title('REMOVAL MODE'))
     allowed_values = [n for n in range(1, len(sc.jobs) + 1)]
     i = flow_util.get_validated_output(
                             validation_func=flow_util.validate_known_input,
-                            prompt='Select an alarm to remove',
+                            prompt=f'{sc}Select an alarm to remove',
                             allowed_values=allowed_values)
     sc.pop(int(i))
 
@@ -100,7 +102,11 @@ def set_alarm(sc: AlarmScheduler, tz_frame):
                          f'or press "Enter" to use default one'
                          f'{display_util.highlight(" >>> ", color="g")}')
     display_util.clear()
-    sc.add(Alarm(dt, alarm_prompt))
+    if alarm_prompt:
+        current_alarm = Alarm(dt, alarm_prompt)
+    else:
+        current_alarm = Alarm(dt)
+    sc.add(current_alarm)
 
 
 @flow_util.act_on_interrupt
