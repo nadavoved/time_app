@@ -1,12 +1,9 @@
 import functools
-
 import time
-
-from zoneinfo import ZoneInfo
-
-
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from datetime import datetime
 
+import pandas as pd
 from dateutil.parser import parse
 
 from util.display_util import highlight, clear, format_dt
@@ -49,13 +46,15 @@ def get_validated_input(validation_func, inp_func=input, prompt: str=None,
 
 def validate_known_input(inp, allowed_values):
     """Validate that given input is within allowed values."""
+    allowed_values = list(map(str, allowed_values))
     if inp in allowed_values:
         return inp
-    raise ValueError(f'{inp} not in allowed values:{allowed_values}.')
+    allowed_str = ",".join(list(allowed_values))
+    raise ValueError(f'{inp} not in allowed values: {allowed_str}.')
 
 
 def input_date():
-    zone = get_validated_input(validation_func=ZoneInfo,
+    zone = get_validated_input(validation_func=validate_tz,
                                prompt='Enter a timezone, or press '
                                       '"Enter" for the '
                                       'current timezone', break_value='')
@@ -64,6 +63,31 @@ def input_date():
     if zone:
         dt = dt.replace(tzinfo=zone)
     return dt
+
+def validate_tz(tz_str: str):
+    """Return a valid IANA timezone from a given string.
+    Given String can be either a specific city / province, or a country.
+    """
+    df = pd.read_parquet('geo_data/complete_data.parquet')
+    q_iter = (item for item in df if item not in
+              ('continent', 'population'))
+    for item in q_iter:
+        res = df[df[item] == tz_str] \
+            .drop_duplicates(subset=['utc_offset'])
+        if not res.empty:
+            n = len(res)
+            if n > 1:
+                res.index = range(1, n + 1)
+                menu = res[['tz_name', 'utc_offset']]
+                prompt = (highlight(f"{tz_str} has {n} time zones:\n"
+                          f"Select a number from the given menu\n{menu}\n"))
+                sel = get_validated_input(validation_func=validate_known_input,
+                                          prompt=prompt, allowed_values=list(res.index))
+                tz = res.loc[int(sel), 'timezone']
+            else:
+                tz = res.iloc[0].timezone
+            return ZoneInfo(tz)
+    raise ZoneInfoNotFoundError(f'No such zone as "{tz_str}"!')
 
 
 def validate_date(dt):

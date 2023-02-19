@@ -83,7 +83,7 @@ class AlarmScheduler:
 def remove_alarm(sc):
     print(sc)
     print(display_util.title('REMOVAL MODE'))
-    allowed_values = [str(n) for n in range(1, len(sc.jobs) + 1)]
+    allowed_values = [n for n in range(1, len(sc.jobs) + 1)]
     i = flow_util.get_validated_input(
                             validation_func=flow_util.validate_known_input,
                             prompt='Select an alarm to remove',
