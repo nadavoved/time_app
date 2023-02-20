@@ -63,8 +63,8 @@ if __name__ == '__main__':
             if args.flush:
                 sc.flush()
                 print(display_util.highlight('Cleared alarm cache', color='y'))
-            elif args.edit:
-                df = pd.read_parquet(path='geo_data/complete_data.parquet')
+            elif args.edit: # TODO - check status of scheduler while editing
+                df = pd.read_parquet(path='geo_data/tz_db/tz_dictionary.parquet')
                 edit_scheduler(sc, tz_frame=df, repeat=args.repeat)
             else:
                 run_scheduler(sc)
