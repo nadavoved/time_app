@@ -36,7 +36,7 @@ class Alarm:
 
 class AlarmScheduler:
     """Scheduler Class."""
-    _CACHE_PATH = '../cache/alarm_cache.sqlite'
+    _CACHE_PATH = './cache/alarm_cache.sqlite'
 
     def __init__(self):
         db_url = f'sqlite:///{self._CACHE_PATH}'
@@ -133,7 +133,7 @@ def edit_alarm(sc: AlarmScheduler, tz_frame):
 
 
 def edit_scheduler(sc, repeat=False):
-    df = pd.read_parquet(path='../geo_data/tz_sorted.parquet')
+    df = pd.read_parquet(path='./geo_data/tz_sorted.parquet')
     def edit():
         edit_alarm(sc, tz_frame=df)
 
