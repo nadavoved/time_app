@@ -40,7 +40,7 @@ def validate_tz(tz_str: str, tz_frame):
     """Return a valid IANA timezone from a given string.
     Given String can be either a specific city / province, or a country.
     """
-    q_lst = ['name', 'abbreviation', 'offset_str', 'country']
+    q_lst = ['city', 'abbreviation', 'offset_str', 'country']
     for item in q_lst:
         res = tz_frame[tz_frame[item] == tz_str].drop_duplicates(subset=['gmt_offset'])
         if not res.empty:
