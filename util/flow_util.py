@@ -1,12 +1,7 @@
 import functools
 import time
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-from datetime import datetime, timedelta
 
-from dateutil.parser import parse
-
-from util.display_util import highlight, clear, format_dt, format_delta, format_date_and_delta
-
+from util.display_util import highlight, clear
 
 def get_validated_output(*, validation_func, prompt: str=None,
                          break_value: str=None, **kwargs):
@@ -38,62 +33,6 @@ def get_validated_output(*, validation_func, prompt: str=None,
         except Exception as err:
             print(highlight(str(err).strip('\' '), color='r'))
 
-
-def validate_known_input(inp, allowed_values):
-    """Validate that given input is within allowed values."""
-    allowed_values = list(map(str, allowed_values))
-    if inp in allowed_values:
-        return inp
-    allowed_str = ",".join(list(allowed_values))
-    raise ValueError(f'{inp} not in allowed values: {allowed_str}.')
-
-def validate_date(tz_frame):
-    """Validate datetime with timezone."""
-    zone = get_validated_output(validation_func=validate_tz,
-                                prompt='Enter a timezone, or press '
-                                      '"Enter" for the '
-                                      'current timezone',
-                                break_value='',
-                                tz_frame=tz_frame)
-    dt = get_validated_output(validation_func=parse, prompt='Enter a date',
-                              ignoretz=True)
-    if zone:
-        dt = dt.replace(tzinfo=zone)
-    else:
-        dt = dt.astimezone()
-    delta = dt - datetime.now().astimezone()
-    print(format_date_and_delta(dt, delta))
-    if delta > timedelta():
-        return dt
-    else:
-        raise ValueError('Can\'t set alarm in the past !')
-
-
-def validate_tz(tz_str: str, tz_frame):
-    """Return a valid IANA timezone from a given string.
-    Given String can be either a specific city / province, or a country.
-    """
-    q_iter = (item for item in tz_frame if item not in
-              ('continent', 'population'))
-    for item in q_iter:
-        res = tz_frame[tz_frame[item] == tz_str] \
-            .drop_duplicates(subset=['utc_offset'])
-        if not res.empty:
-            n = len(res)
-            if n > 1:
-                val_lst = list(range(1, n + 1))
-                res.index = [f'({i})' for i in val_lst]
-                slc = res[['country', 'utc_offset']]
-                menu = slc.rename(columns=dict(country='Country', utc_offset='UTC Offset'))
-                prompt = (highlight(f"{tz_str} has {n} time zones:\n"
-                          f"Select a number from the given menu\n{menu}\n"))
-                sel = get_validated_output(validation_func=validate_known_input,
-                                           prompt=prompt, allowed_values=val_lst)
-                i = int(sel) - 1
-            else:
-                i = 0
-            return ZoneInfo(res.timezone.iloc[i])
-    raise ZoneInfoNotFoundError(f'No such zone as "{tz_str}"!')
 
 def act_on_interrupt(func):
     """Decorate a function to go back on a keyboard interrupt.

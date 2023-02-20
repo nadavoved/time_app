@@ -1,9 +1,7 @@
 import argparse
 
-import pandas as pd
-
 from util import display_util
-from alarm import run_scheduler, edit_scheduler, AlarmScheduler
+from modes.alarm import run_scheduler, edit_scheduler, AlarmScheduler
 
 
 def gen_alarm_parser(sub_parser):
@@ -63,9 +61,8 @@ if __name__ == '__main__':
             if args.flush:
                 sc.flush()
                 print(display_util.highlight('Cleared alarm cache', color='y'))
-            elif args.edit: # TODO - check status of scheduler while editing
-                df = pd.read_parquet(path='geo_data/tz_db/tz_dictionary.parquet')
-                edit_scheduler(sc, tz_frame=df, repeat=args.repeat)
+            elif args.edit:
+                edit_scheduler(sc, repeat=args.repeat)
             else:
                 run_scheduler(sc)
         case 'timer':

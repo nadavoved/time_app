@@ -40,7 +40,7 @@ def clear():
 def format_dt(dt: datetime):
     """Format datetime to string."""
     if dt.tzinfo:
-        return dt.strftime("%m/%d/%Y, %H:%M:%S, %Z, UTC%z")
+        return dt.strftime("%m/%d/%Y, %H:%M:%S, UTC%z")
     else:
         return dt.strftime("%m/%d/%Y, %H:%M:%S")
 

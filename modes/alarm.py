@@ -2,10 +2,11 @@ import time
 from datetime import datetime
 from warnings import filterwarnings
 
+import pandas as pd
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
-from util import display_util, flow_util
+from util import display_util, flow_util, valid_util
 
 filterwarnings('ignore',
                message=r'The localize method is no longer necessary.*')
@@ -35,7 +36,7 @@ class Alarm:
 
 class AlarmScheduler:
     """Scheduler Class."""
-    _CACHE_PATH = 'cache/alarm_cache.sqlite'
+    _CACHE_PATH = '../cache/alarm_cache.sqlite'
 
     def __init__(self):
         db_url = f'sqlite:///{self._CACHE_PATH}'
@@ -87,7 +88,7 @@ def remove_alarm(sc):
     print(display_util.title('REMOVAL MODE'))
     allowed_values = [n for n in range(1, len(sc.jobs) + 1)]
     i = flow_util.get_validated_output(
-                            validation_func=flow_util.validate_known_input,
+                            validation_func=valid_util.validate_known_input,
                             prompt=f'{sc}Select an alarm to remove',
                             allowed_values=allowed_values)
     sc.pop(int(i))
@@ -96,7 +97,7 @@ def remove_alarm(sc):
 def set_alarm(sc: AlarmScheduler, tz_frame):
     print(sc)
     print(display_util.title('SETTING MODE'))
-    dt = flow_util.get_validated_output(validation_func=flow_util.validate_date,
+    dt = flow_util.get_validated_output(validation_func=valid_util.validate_date,
                                         tz_frame=tz_frame)
     alarm_prompt = input(f'Enter alarm prompt, '
                          f'or press "Enter" to use default one'
@@ -119,7 +120,7 @@ def edit_alarm(sc: AlarmScheduler, tz_frame):
 
     if sc.has_jobs:
         action = flow_util.get_validated_output(
-                                     validation_func=flow_util.validate_known_input,
+                                     validation_func=valid_util.validate_known_input,
                                      prompt=f'{sc}\nSet or remove an alarm[s/r]?',
                                      allowed_values=['s', 'r', 'S', 'R'])
         if action.lower() == 'r':
@@ -131,9 +132,10 @@ def edit_alarm(sc: AlarmScheduler, tz_frame):
 
 
 
-def edit_scheduler(sc, tz_frame, repeat=False):
+def edit_scheduler(sc, repeat=False):
+    df = pd.read_parquet(path='../geo_data/tz_sorted.parquet')
     def edit():
-        edit_alarm(sc, tz_frame=tz_frame)
+        edit_alarm(sc, tz_frame=df)
 
     if repeat:
         while True:
