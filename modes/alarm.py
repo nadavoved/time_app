@@ -5,7 +5,7 @@ from warnings import filterwarnings
 import pandas as pd
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-
+from playsound import playsound
 from util import display_util, flow_util, valid_util
 
 filterwarnings('ignore',
@@ -53,8 +53,8 @@ class AlarmScheduler:
     def add(self, alarm: Alarm):
         """Schedule a new alarm / rewrite an existing one."""
         self._scheduler.add_job(replace_existing=True, id=alarm.id,
-                                func=display_util.cprint, trigger='date',
-                                run_date=alarm.dt, args=[alarm.prompt])
+                                func=playsound, trigger='date',
+                                run_date=alarm.dt, args=['sounds/west_guitar.wav'])
         print(display_util.highlight(f'Alarm was set on {alarm}'))
 
     def pop(self, index: int):
