@@ -58,7 +58,11 @@ class AlarmScheduler:
                                 func=play, trigger='date',
                                 run_date=alarm.dt,
                                 args=['sounds/west_guitar.wav', alarm.repeat])
-        print(display_util.highlight(f'Alarm was set on {alarm}'))
+        if alarm.repeat == 1:
+            fmt = 'Action won\'t repeat.'
+        else:
+            fmt = f'Action will repeat {alarm.repeat} times.'
+        print(display_util.highlight(f'Alarm was set on {alarm}\n{fmt}'))
 
     def pop(self, index: int):
         """Deactivate alarm if scheduled."""
@@ -140,7 +144,7 @@ def edit_scheduler(sc, repeat=False):
     else:
         edit()
 
-
+@flow_util.act_on_interrupt
 def run_scheduler(sc: AlarmScheduler):
     print(display_util.highlight('Scheduler is up and running...', color='b'))
     print(sc)

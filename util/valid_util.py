@@ -17,10 +17,16 @@ def validate_known_input(inp, allowed_values):
 
 def validate_repeat(repeat: str):
     """Validate repeat value for actions."""
+    if repeat == '':
+        return 1
     try:
-        return int(repeat)
+        n = int(repeat)
     except ValueError:
-        raise ValueError('repeat value should be a number.')
+        raise ValueError('Repetition value should be a number.')
+    else:
+        if n < 1:
+            raise ValueError('Repetition value should be at least 1.')
+        return n
 def validate_date(tz_frame):
     """Validate datetime with timezone."""
     zone = get_validated_output(validation_func=validate_tz,
