@@ -6,6 +6,7 @@ import pandas as pd
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from playsound import playsound
+
 from util import display_util, flow_util, valid_util
 
 filterwarnings('ignore',
@@ -15,7 +16,7 @@ filterwarnings('ignore',
 class Alarm:
     """Alarm class."""
 
-    def __init__(self, dt_obj, prompt: str = 'TIME OUT!!!'):
+    def __init__(self, dt_obj):
         """Constructor method.
         :param: dt_obj: a datetime object.
         :type: date: datetime.datetime
@@ -25,13 +26,12 @@ class Alarm:
         :type: prompt: str
         """
         self.dt = dt_obj
-        self.prompt = prompt
         self.id = display_util.format_dt(self.dt)
 
     def __str__(self):
         delta = self.dt - datetime.now().astimezone()
         fmt = display_util.format_date_and_delta(self.dt, delta)
-        return f'{fmt}\nprompt: {display_util.highlight(self.prompt)}'
+        return fmt
 
 
 class AlarmScheduler:
@@ -99,15 +99,7 @@ def set_alarm(sc: AlarmScheduler, tz_frame):
     print(display_util.title('SETTING MODE'))
     dt = flow_util.get_validated_output(validation_func=valid_util.validate_date,
                                         tz_frame=tz_frame)
-    alarm_prompt = input(f'Enter alarm prompt, '
-                         f'or press "Enter" to use default one'
-                         f'{display_util.highlight(" >>> ", color="g")}')
-    display_util.clear()
-    if alarm_prompt:
-        current_alarm = Alarm(dt, alarm_prompt)
-    else:
-        current_alarm = Alarm(dt)
-    sc.add(current_alarm)
+    sc.add(Alarm(dt))
 
 
 @flow_util.act_on_interrupt
