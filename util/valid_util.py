@@ -14,6 +14,13 @@ def validate_known_input(inp, allowed_values):
     allowed_str = ",".join(list(allowed_values))
     raise ValueError(f'{inp} not in allowed values: {allowed_str}.')
 
+
+def validate_repeat(repeat: str):
+    """Validate repeat value for actions."""
+    try:
+        return int(repeat)
+    except ValueError:
+        raise ValueError('repeat value should be a number.')
 def validate_date(tz_frame):
     """Validate datetime with timezone."""
     zone = get_validated_output(validation_func=validate_tz,

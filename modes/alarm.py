@@ -5,9 +5,11 @@ from warnings import filterwarnings
 import pandas as pd
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from playsound import playsound
+
 
 from util import display_util, flow_util, valid_util
+from actions import play
+
 
 filterwarnings('ignore',
                message=r'The localize method is no longer necessary.*')
@@ -16,7 +18,7 @@ filterwarnings('ignore',
 class Alarm:
     """Alarm class."""
 
-    def __init__(self, dt_obj):
+    def __init__(self, dt_obj, repeat: int):
         """Constructor method.
         :param: dt_obj: a datetime object.
         :type: date: datetime.datetime
@@ -27,7 +29,7 @@ class Alarm:
         """
         self.dt = dt_obj
         self.id = display_util.format_dt(self.dt)
-
+        self.repeat = repeat
     def __str__(self):
         delta = self.dt - datetime.now().astimezone()
         fmt = display_util.format_date_and_delta(self.dt, delta)
@@ -53,8 +55,9 @@ class AlarmScheduler:
     def add(self, alarm: Alarm):
         """Schedule a new alarm / rewrite an existing one."""
         self._scheduler.add_job(replace_existing=True, id=alarm.id,
-                                func=playsound, trigger='date',
-                                run_date=alarm.dt, args=['sounds/west_guitar.wav'])
+                                func=play, trigger='date',
+                                run_date=alarm.dt,
+                                args=['sounds/west_guitar.wav', alarm.repeat])
         print(display_util.highlight(f'Alarm was set on {alarm}'))
 
     def pop(self, index: int):
@@ -99,7 +102,9 @@ def set_alarm(sc: AlarmScheduler, tz_frame):
     print(display_util.title('SETTING MODE'))
     dt = flow_util.get_validated_output(validation_func=valid_util.validate_date,
                                         tz_frame=tz_frame)
-    sc.add(Alarm(dt))
+    repeat = flow_util.get_validated_output(validation_func=valid_util.validate_repeat,
+                                            prompt='Enter the number of repeats for alarm action')
+    sc.add(Alarm(dt, repeat))
 
 
 @flow_util.act_on_interrupt
