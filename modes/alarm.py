@@ -32,8 +32,13 @@ class Alarm:
         self.repeat = repeat
     def __str__(self):
         delta = self.dt - datetime.now().astimezone()
-        fmt = display_util.format_date_and_delta(self.dt, delta)
-        return fmt
+        fmt = display_util.format_date_and_delta(self.dt, delta,
+                                                 color=False)
+        if self.repeat == 1:
+            ext = 'Action won\'t repeat.'
+        else:
+            ext = f'Action will repeat {self.repeat} times.'
+        return f'{fmt} {ext}'
 
 
 class AlarmScheduler:
@@ -58,11 +63,7 @@ class AlarmScheduler:
                                 func=play, trigger='date',
                                 run_date=alarm.dt,
                                 args=['sounds/west_guitar.wav', alarm.repeat])
-        if alarm.repeat == 1:
-            fmt = 'Action won\'t repeat.'
-        else:
-            fmt = f'Action will repeat {alarm.repeat} times.'
-        print(display_util.highlight(f'Alarm was set on {alarm}\n{fmt}'))
+        print(display_util.highlight(f'Alarm was set on {alarm}'))
 
     def pop(self, index: int):
         """Deactivate alarm if scheduled."""

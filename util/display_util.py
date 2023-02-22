@@ -70,10 +70,15 @@ def format_delta(td: timedelta):
         res = '0 seconds'
     return res, is_neg
 
-def format_date_and_delta(dt, delta):
+def format_date_and_delta(dt, delta, color=True):
     delta_str, is_neg = format_delta(delta)
     chron_order = {True: 'Before', False: 'In'}
-    chron_color = {True: 'r', False: 'y'}
-    return highlight(f'date: {format_dt(dt)}\n{chron_order[is_neg]} {delta_str}.',
-                    color=chron_color[is_neg])
+    res = f'date: {format_dt(dt)}.\n{chron_order[is_neg]} {delta_str}.'
+    if color:
+        chron_color = {True: 'r', False: 'y'}
+        return highlight(res, color=chron_color[is_neg])
+    else:
+        return res
+
+
 
